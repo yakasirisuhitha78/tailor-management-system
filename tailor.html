@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tailor Management System</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f4f4;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            width: 450px;
+            margin: auto;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px gray;
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 8px;
+            margin-top: 8px;
+        }
+
+        button {
+            background: teal;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: darkcyan;
+        }
+
+        .customer {
+            background: #e0f7f7;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+
+        .delete-btn {
+            background: red;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Tailor Management System</h1>
+
+<div class="container">
+
+    <input type="text" id="name" placeholder="Customer Name">
+    <input type="text" id="phone" placeholder="Phone Number">
+
+    <input type="number" id="bust" placeholder="Bust">
+    <input type="number" id="waist" placeholder="Waist">
+    <input type="number" id="sleeve" placeholder="Sleeve Length">
+
+    <select id="model">
+        <option value="">Select Blouse Model</option>
+        <option value="500">Simple Blouse - ₹500</option>
+        <option value="900">Designer Blouse - ₹900</option>
+        <option value="700">Boat Neck Blouse - ₹700</option>
+    </select>
+
+    <input type="number" id="price" placeholder="Price" readonly>
+    <input type="date" id="deliveryDate">
+    <input type="number" id="advance" placeholder="Advance Paid">
+    <input type="number" id="pending" placeholder="Pending Amount" readonly>
+
+    <button onclick="addCustomer()">Save Customer</button>
+
+    <hr>
+
+    <input type="text" id="searchPhone" placeholder="Search by Phone">
+    <button onclick="searchCustomer()">Search</button>
+
+    <div id="customerList"></div>
+
+</div>
+
+<script>
+
+let customers = JSON.parse(localStorage.getItem("customers")) || [];
+
+document.getElementById("model").addEventListener("change", function () {
+    document.getElementById("price").value = this.value;
+    calculatePending();
+});
+
+document.getElementById("advance").addEventListener("input", function () {
+    calculatePending();
+});
+
+function calculatePending() {
+    let price = parseInt(document.getElementById("price").value) || 0;
+    let advance = parseInt(document.getElementById("advance").value) || 0;
+    let pending = price - advance;
+    document.getElementById("pending").value = pending >= 0 ? pending : 0;
+}
+
+function saveData() {
+    localStorage.setItem("customers", JSON.stringify(customers));
+}
+
+function addCustomer() {
+
+    let name = document.getElementById("name").value;
+    let phone = document.getElementById("phone").value;
+    let bust = document.getElementById("bust").value;
+    let waist = document.getElementById("waist").value;
+    let sleeve = document.getElementById("sleeve").value;
+    let modelSelect = document.getElementById("model");
+    let modelText = modelSelect.options[modelSelect.selectedIndex].text;
+    let price = document.getElementById("price").value;
+    let deliveryDate = document.getElementById("deliveryDate").value;
+    let advance = document.getElementById("advance").value || 0;
+    let pending = document.getElementById("pending").value || 0;
+
+    if (!name || !phone || !bust || !waist || !sleeve || !price || !deliveryDate) {
+        alert("Please fill all required fields");
+        return;
+    }
+
+    customers.push({
+        name, phone, bust, waist, sleeve,
+        model: modelText,
+        price, deliveryDate,
+        advance, pending
+    });
+
+    saveData();
+    displayCustomers();
+    clearForm();
+}
+
+function deleteCustomer(index) {
+    customers.splice(index, 1);
+    saveData();
+    displayCustomers();
+}
+
+function searchCustomer() {
+    let searchPhone = document.getElementById("searchPhone").value;
+    let list = document.getElementById("customerList");
+    list.innerHTML = "";
+
+    let filtered = customers.filter(c => c.phone.includes(searchPhone));
+
+    filtered.forEach((c, index) => {
+        showCustomer(c, index);
+    });
+}
+
+function displayCustomers() {
+    let list = document.getElementById("customerList");
+    list.innerHTML = "";
+
+    customers.forEach((c, index) => {
+        showCustomer(c, index);
+    });
+}
+
+function showCustomer(c, index) {
+    let list = document.getElementById("customerList");
+
+    list.innerHTML += `
+        <div class="customer">
+            <b>Name:</b> ${c.name}<br>
+            <b>Phone:</b> ${c.phone}<br>
+            <b>Measurements:</b> Bust: ${c.bust}, Waist: ${c.waist}, Sleeve: ${c.sleeve}<br>
+            <b>Model:</b> ${c.model}<br>
+            <b>Price:</b> ₹${c.price}<br>
+            <b>Delivery:</b> ${c.deliveryDate}<br>
+            <b>Advance:</b> ₹${c.advance}<br>
+            <b>Pending:</b> ₹${c.pending}<br>
+            <button class="delete-btn" onclick="deleteCustomer(${index})">Delete</button>
+        </div>
+    `;
+}
+
+function clearForm() {
+    document.querySelectorAll("input").forEach(i => i.value = "");
+    document.getElementById("model").value = "";
+}
+
+displayCustomers();
+
+</script>
+
+</body>
+</html>
